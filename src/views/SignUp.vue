@@ -101,7 +101,7 @@ const submit = async () => {
             v-model="state.data.upw"
             not-null="true"
             not-null-message="비밀번호는 필수로 입력하셔야 합니다."
-            regexp="^(?=.*[A-Za-z])(?=.*\d)(?=.*[~!@#$%^&*()+|=])[A-Za-z\d~!@#$%^&*()+|=]{8,16}$"
+            regexp="^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&amp;*()_+\-=\[\]{};':&quot;\\|,.&lt;&gt;\/?])[A-Za-z\d!@#$%^&amp;*()_+\-=\[\]{};':&quot;\\|,.&lt;&gt;\/?]{8,16}$"
             regexp-message="비밀번호는 영문/숫자/특수문자 최소 1개씩 포함, 8~16자로 설정해주세요. (특수문자 일부 제외)"
             autocomplete="off"
           />
@@ -121,7 +121,7 @@ const submit = async () => {
         <div class="form-floating">
           <input
             type="text"
-            class="form-control"
+            class="form-control valid"
             id="nickName"
             placeholder="닉네임"
             v-model="state.data.nickName"
