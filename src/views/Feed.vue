@@ -74,10 +74,13 @@ const handlePicChanged = (e) => {
 
 const saveFeed = async () => {
   console.log("state.feed.pics: ", state.feed.pics);
+  const MAX_PIC_COUNT = 10;
   //사진 있는지 확인
   if (state.feed.pics.length === 0) {
     alert("사진을 선택해 주세요.");
     return;
+  } else if (state.feed.pics.length > MAX_PIC_COUNT) {
+    alert(`사진은 ${MAX_PIC_COUNT}장 이하만 가능합니다.`);
   }
 
   const params = {
@@ -163,34 +166,36 @@ const handleScroll = () => {
         </div>
         <div class="modal-body" id="id-modal-body">
           <div>
-            location:
+            <h5 class="mt-2">location</h5>
             <input
               type="text"
               name="location"
               placeholder="위치"
               v-model="state.feed.location"
+              class="form-control"
             />
           </div>
           <div>
-            contents:
+            <h5 class="mt-2">contents</h5>
             <textarea
               name="contents"
               placeholder="내용"
               v-model="state.feed.contents"
+              class="form-control"
             ></textarea>
           </div>
           <div>
-            <label
-              >pic:
-              <!-- <input
+            <h5 class="mt-2">pic</h5>
+            <!-- <label>
+              <input
                 name="pics"
                 type="file"
                 multiple
                 accept="image/*"
                 @change="handlePicChanged"
                 class="mt-3"
-            /> -->
-            </label>
+            />
+            </label> -->
           </div>
           <div>
             <div class="input-group mb-3">
@@ -205,7 +210,7 @@ const handleScroll = () => {
               />
             </div>
           </div>
-          <div>
+          <div class="d-flex">
             <button class="btn btn-dark mt-3" @click="saveFeed">전송</button>
           </div>
         </div>

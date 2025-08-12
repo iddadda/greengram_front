@@ -1,5 +1,5 @@
 <script setup>
-import logo from '@/assets/logo.png';
+import logo from '@/assets/logo2.png';
 import ProfileImg from './ProfileImg.vue';
 
 import { useAuthenticationStore } from '@/stores/authentication';
