@@ -182,15 +182,32 @@ const handleScroll = () => {
           <div>
             <label
               >pic:
+              <!-- <input
+                name="pics"
+                type="file"
+                multiple
+                accept="image/*"
+                @change="handlePicChanged"
+                class="mt-3"
+            /> -->
+            </label>
+          </div>
+          <div>
+            <div class="input-group mb-3">
               <input
                 name="pics"
                 type="file"
                 multiple
                 accept="image/*"
                 @change="handlePicChanged"
-            /></label>
+                class="form-control"
+                id="inputGroupFile01"
+              />
+            </div>
           </div>
-          <div><button @click="saveFeed">전송</button></div>
+          <div>
+            <button class="btn btn-dark mt-3" @click="saveFeed">전송</button>
+          </div>
         </div>
       </div>
     </div>
