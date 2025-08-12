@@ -101,12 +101,11 @@ const toggleLike = async () => {
     </div>
 
     <swiper
-      navigation
       :modules="state.modules"
       :pagination="{ clickable: true }"
-      :scrollbar="{ draggable: true }"
       :slides-per-view="1"
       :space-between="50"
+      class=""
     >
       <swiper-slide
         v-for="(item, idx) in props.item.pics"

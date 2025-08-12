@@ -11,7 +11,7 @@ const modalCloseButton = ref(null);
 const authenticationStore = useAuthenticationStore();
 
 const state = reactive({
-  list: [],
+  list: [], // getData() 했을 때 데이터가 저장되는 부분
   isLoading: false,
   isFinish: false,
   feed: {
@@ -62,6 +62,7 @@ const getData = async () => {
       state.list = [...state.list, ...result];
     }
     if (result.length < data.rowPerPage) {
+      // 더이상 페이징이 되지 않도록 안전장치
       state.isFinish = true;
     }
   }
@@ -102,6 +103,7 @@ const saveFeed = async () => {
     const result = res.data.result;
 
     const item = {
+      // 직접 객체를 만들어서 데이터를 집어넣음
       ...params,
       feedId: result.feedId,
       pics: result.pics,
