@@ -1,11 +1,11 @@
 <script setup>
 import ProfileImg from "./ProfileImg.vue";
+import FeedCommentContainer from "./FeedCommentContainer.vue";
 import { useAuthenticationStore } from "@/stores/authentication";
 import { Navigation, Pagination, Scrollbar, A11y } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/vue";
 import { ref, reactive } from "vue";
 import { getDateTimeInfo } from "@/utils/feedUtils";
-
 import { toggleFeedLike } from "@/services/feedLikeService";
 
 import "swiper/css";
@@ -28,15 +28,20 @@ const props = defineProps({
     contents: String,
     isLike: Boolean,
     comment: Object,
-    yndel: Boolean,
-    onDeleteFeed: Function,
   },
   ynDel: Boolean,
+  onDeleteFeed: Function,
 });
 
 const state = reactive({
   modules: [Navigation, Pagination, Scrollbar, A11y],
   isLike: props.item.isLike,
+  pagination:
+    props.item.pics.length <= 5
+      ? {
+          clickable: true,
+        }
+      : null,
 });
 
 const toggleLike = async () => {
@@ -79,7 +84,14 @@ const toggleLike = async () => {
       <div class="p-3 flex-grow-1">
         <div>
           <router-link :to="`/profile/${props.item.writerUserId}`">
-            <span class="pointer">{{ props.item.writerNm }}</span>
+            <span class="pointer"
+              >{{
+                props.item.writerNickName
+                  ? props.item.writerNickName
+                  : props.item.writerUid
+              }}
+              - {{ getDateTimeInfo(props.item.createdAt) }}</span
+            >
           </router-link>
         </div>
         <div>{{ props.item.location }}</div>
@@ -131,15 +143,19 @@ const toggleLike = async () => {
     <div class="itemCtnt p-2" v-if="props.item.contents">
       {{ props.item.contents }}
     </div>
+    <feed-comment-container
+      :feed-id="props.item.feedId"
+      :comments="props.item.comments"
+    />
   </div>
 </template>
 
 <style scoped>
 .item {
   border: 1px solid #9f9e9e;
-  width: 600px;
+  width: 550px;
 }
 .w614 {
-  width: 614px;
+  width: 100%;
 }
 </style>

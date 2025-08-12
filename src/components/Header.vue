@@ -9,28 +9,12 @@ const authenticationStore = useAuthenticationStore();
 
 
 
-
-
-
-
-
 const doSignOut = async () => {    
     const res = await signOut();
     if(res.status === 200) {
         await authenticationStore.signOut()
     }
 }
-
-
-
-
-
-
-
-
-
-
-
 
 
 </script>
