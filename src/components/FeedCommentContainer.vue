@@ -6,11 +6,14 @@ import {
   getCommentList,
   deleteComment,
 } from "@/services/feedCommentService";
+import { useAuthenticationStore } from "@/stores/authentication";
 
 const props = defineProps({
   feedId: Number,
   comments: Object,
 });
+
+const authenticationStore = useAuthenticationStore();
 
 const state = reactive({
   isLoading: false,
@@ -46,13 +49,25 @@ const onPostComment = async () => {
   }
 
   const data = {
-    feedId: 0,
+    feedId: props.feedId,
     comment: state.comment,
   };
 
   const res = await postComment(data);
   if (res.status === 200) {
     const result = res.data.result;
+
+    const commentItem = {
+      feedCommentId: result,
+      writerUserId: authenticationStore.state.signedUser.userId,
+      writerNm: authenticationStore.state.signedUser.nickName,
+      writerPic: authenticationStore.state.signedUser.pic,
+      comment: state.comment,
+    };
+
+    state.commentList.unshift(commentItem);
+
+    state.comment = "";
   }
 };
 
@@ -94,7 +109,7 @@ const onDeleteComment = async (feedCommentId, idx) => {
 
 <template>
   <div>
-    <div class="overflow-y-auto max-height-240">
+    <div class="overflow-y-auto max-height-240 pt-4">
       <div v-if="state.isLoading">Loading...</div>
       <feed-comment-card
         v-for="(item, idx) in state.commentList"
@@ -106,7 +121,7 @@ const onDeleteComment = async (feedCommentId, idx) => {
         <span class="pointer" @click="getMoreComment">댓글 더보기</span>
       </div>
     </div>
-    <div class="p-2 d-flex flex-row div-top">
+    <div class="p-2 d-flex flex-row">
       <input
         type="text"
         name="commentValue"

@@ -10,32 +10,34 @@ const props = defineProps({
 </script>
 
 <template>
-  <div class="cmtItemCont">
-    <div class="cmtItemProfile">
+  <div class="cmtItemCont mb-3">
+    <div class="cmtItemProfile d-flex gap-1">
       <profile-img
         :clsValue="'profile pointer'"
         :size="24"
         :pic="props.item.writerPic"
         :userId="props.item.writerUserId"
       />
-      <template
-        v-if="
-          authenticationStore.state.signedUser.userId ===
-          props.item.writerUserId
-        "
-      >
-        <i class="fa fa-trash pointer" @click="$emit('onDeleteComment')"></i>
-      </template>
-    </div>
-    <div class="cmtItemCtnt">
-      <div class="pointer">
+      <div class="pointer fw-semibold">
         {{
           props.item.writerNickName
             ? props.item.writerNickName
             : props.item.writerUid
         }}
       </div>
-      <div>{{ props.item.comment }}</div>
+    </div>
+    <div class="cmtItemCtnt">
+      <div class="d-flex justify-content-between">
+        <div>{{ props.item.comment }}</div>
+        <template
+          v-if="
+            authenticationStore.state.signedUser.userId ===
+            props.item.writerUserId
+          "
+        >
+          <i class="fa fa-trash pointer" @click="$emit('onDeleteComment')"></i>
+        </template>
+      </div>
     </div>
   </div>
 </template>

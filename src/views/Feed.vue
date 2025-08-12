@@ -11,7 +11,7 @@ const modalCloseButton = ref(null);
 const authenticationStore = useAuthenticationStore();
 
 const state = reactive({
-  list: [], // getData() 했을 때 데이터가 저장되는 부분
+  list: [],
   isLoading: false,
   isFinish: false,
   feed: {
@@ -62,7 +62,6 @@ const getData = async () => {
       state.list = [...state.list, ...result];
     }
     if (result.length < data.rowPerPage) {
-      // 더이상 페이징이 되지 않도록 안전장치
       state.isFinish = true;
     }
   }
@@ -81,12 +80,13 @@ const saveFeed = async () => {
     alert("사진을 선택해 주세요.");
     return;
   } else if (state.feed.pics.length > MAX_PIC_COUNT) {
-    alert(`사진은 ${MAX_PIC_COUNT}장 이하만 가능합니다.`);
+    alert(`사진은 ${MAX_PIC_COUNT}장까지 선택 가능합니다.`);
+    return;
   }
 
   const params = {
-    contents: state.feed.contents,
-    location: state.feed.location,
+    contents: state.feed.contents.length === 0 ? null : state.feed.contents,
+    location: state.feed.location.length === 0 ? null : state.feed.location,
   };
 
   const formData = new FormData();
@@ -98,12 +98,15 @@ const saveFeed = async () => {
     formData.append("pic", state.feed.pics[i]);
   }
 
+  // formData.append('pic', state.feed.pics[0])
+  // formData.append('pic', state.feed.pics[1])
+  // formData.append('pic', state.feed.pics[2])
+
   const res = await postFeed(formData);
   if (res.status === 200) {
     const result = res.data.result;
 
     const item = {
-      // 직접 객체를 만들어서 데이터를 집어넣음
       ...params,
       feedId: result.feedId,
       pics: result.pics,
@@ -118,12 +121,19 @@ const saveFeed = async () => {
     };
 
     state.list.unshift(item);
-
+    initInputs();
     modalCloseButton.value.click(); //모달창 닫기
   }
 };
 
+const initInputs = () => {
+  state.feed.contents = "";
+  state.feed.location = "";
+  state.feed.pics = [];
+};
+
 const handleScroll = () => {
+  console.log("스크롤 이벤트");
   if (
     state.isFinish ||
     state.isLoading ||
@@ -132,6 +142,7 @@ const handleScroll = () => {
   ) {
     return;
   }
+  console.log("데이터 가져오기");
   getData();
 };
 </script>

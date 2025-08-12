@@ -69,7 +69,7 @@ const toggleLike = async () => {
 </script>
 
 <template>
-  <div class="item mb-3 p-3 w400">
+  <div class="item mb-3 pt-3 pb-3 w400">
     <div class="d-flex flex-row ps-3 pe-3">
       <div class="d-flex flex-column justify-content-center">
         <router-link :to="`/profile/${props.item.writerUserId}`">
@@ -83,15 +83,20 @@ const toggleLike = async () => {
       </div>
       <div class="p-3 flex-grow-1">
         <div>
-          <router-link :to="`/profile/${props.item.writerUserId}`">
+          <router-link
+            :to="`/profile/${props.item.writerUserId}`"
+            class="userName d-flex"
+          >
             <span class="pointer"
               >{{
                 props.item.writerNickName
                   ? props.item.writerNickName
                   : props.item.writerUid
               }}
-              - {{ getDateTimeInfo(props.item.createdAt) }}</span
-            >
+            </span>
+            <span class="dateTimeInfo">
+              • {{ getDateTimeInfo(props.item.createdAt) }}
+            </span>
           </router-link>
         </div>
         <div>{{ props.item.location }}</div>
@@ -114,10 +119,9 @@ const toggleLike = async () => {
 
     <swiper
       :modules="state.modules"
-      :pagination="{ clickable: true }"
+      :pagination="{ clickable: true, dynamicBullets: true }"
       :slides-per-view="1"
       :space-between="50"
-      class=""
     >
       <swiper-slide
         v-for="(item, idx) in props.item.pics"
@@ -143,6 +147,7 @@ const toggleLike = async () => {
     <div class="itemCtnt p-2" v-if="props.item.contents">
       {{ props.item.contents }}
     </div>
+
     <feed-comment-container
       :feed-id="props.item.feedId"
       :comments="props.item.comments"
@@ -152,10 +157,20 @@ const toggleLike = async () => {
 
 <style scoped>
 .item {
-  border: 1px solid #9f9e9e;
+  border-bottom: 1px solid #dbdbdb;
   width: 550px;
 }
 .w614 {
   width: 100%;
+}
+.userName {
+  color: #000;
+  font-weight: 600;
+  text-decoration: none;
+}
+.dateTimeInfo {
+  margin-left: 5px;
+  color: #6d6d6d;
+  font-weight: 500;
 }
 </style>
