@@ -3,6 +3,7 @@ import { ref, reactive, onMounted, onUnmounted } from "vue";
 import { useAuthenticationStore } from "@/stores/authentication";
 import FeedCard from "@/components/FeedCard.vue";
 import { getFeedList, postFeed } from "@/services/feedService";
+import { bindEvent } from "@/utils/commonUtils";
 
 const INFINITY_SCROLL_GAP = 500;
 
@@ -24,6 +25,10 @@ const state = reactive({
 const data = {
   page: 1,
   rowPerPage: 20,
+};
+
+const handleScroll = () => {
+  bindEvent(state, window, getData);
 };
 
 onMounted(() => {
@@ -111,7 +116,7 @@ const saveFeed = async () => {
       feedId: result.feedId,
       pics: result.pics,
       writerId: authenticationStore.state.signedUser.userId,
-      writerNm: authenticationStore.state.signedUser.nickName,
+      writerNickName: authenticationStore.state.signedUser.nickName,
       writerPic: authenticationStore.state.signedUser.pic,
       createdAt: getCurrentTimestamp(),
       comment: {
@@ -131,20 +136,6 @@ const initInputs = () => {
   state.feed.location = "";
   state.feed.pics = [];
 };
-
-const handleScroll = () => {
-  console.log("스크롤 이벤트");
-  if (
-    state.isFinish ||
-    state.isLoading ||
-    parseInt(window.innerHeight + window.scrollY) + INFINITY_SCROLL_GAP <=
-      document.documentElement.offsetHeight
-  ) {
-    return;
-  }
-  console.log("데이터 가져오기");
-  getData();
-};
 </script>
 
 <template>
@@ -152,7 +143,7 @@ const handleScroll = () => {
     <div class="container d-flex flex-column align-items-center">
       <feed-card
         v-for="item in state.list"
-        :key="item.id"
+        :key="item.feedIdid"
         :item="item"
       ></feed-card>
       <p v-if="state.isLoading">Loading...</p>
