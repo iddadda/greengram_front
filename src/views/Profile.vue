@@ -3,7 +3,7 @@ import loadingImg from "@/assets/loading.gif";
 import ProfileImg from "@/components/ProfileImg.vue";
 import FeedCard from "@/components/FeedCard.vue";
 import { ref, reactive, onMounted, onUnmounted } from "vue";
-import { useRoute, useRouter } from "vue-router";
+import { useRoute, useRouter, onBeforeRouteUpdate } from "vue-router";
 import { useAuthenticationStore } from "@/stores/authentication";
 import { getUserProfile, patchUserProfilePic } from "@/services/userService";
 import { postUserFollow, deleteUserFollow } from "@/services/followService";
@@ -11,16 +11,18 @@ import { getFeedList } from "@/services/feedService";
 import { bindEvent } from "@/utils/commonUtils";
 
 const fileInput = ref(null);
+const authenticationStore = useAuthenticationStore();
 
 const route = useRoute(); //PathVariable 데이터 가져오기 위한 용도
 
 const data = {
-  profileUserId: parseInt(route.params.userId),
+  profileUserId: 0,
   page: 1,
   rowPerPage: 20,
 };
 
 const state = reactive({
+  isMyProfile: false,
   isLoading: false,
   isFinish: false,
   userProfile: {
@@ -33,11 +35,35 @@ const state = reactive({
     allFeedLikeCount: 0,
     followerCount: 0,
     followingCount: 0,
+    followState: 0,
   },
   list: [],
 });
 
-const authenticationStore = useAuthenticationStore();
+const init = (userId) => {
+  state.isFinish = false;
+  state.userProfile = {
+    userId: 0,
+    uid: "",
+    pic: "",
+    nickName: "",
+    createdAt: "",
+    feedCount: 0,
+    allFeedLikeCount: 0,
+    followerCount: 0,
+    followingCount: 0,
+    followState: 0,
+  };
+  state.list = [];
+
+  data.page = 1;
+  data.profileUserId = userId;
+
+  state.isMyProfile =
+    data.profileUserId === authenticationStore.state.signedUser.userId;
+};
+
+init(parseInt(route.params.userId));
 
 console.log("route.params.userId:", route.params.userId);
 
@@ -51,7 +77,6 @@ const isMyProfile =
 2: 상대방만 나를 팔로우 한 상태
 3: 서로 팔로우 한 상태
 */
-
 const getFollowStateText = (followState) => {
   console.log(`followState : ${followState}`);
   switch (followState) {
@@ -70,6 +95,7 @@ const getUserData = async () => {
     profile_user_id: data.profileUserId,
   };
   const res = await getUserProfile(params);
+
   if (res.status === 200) {
     const result = res.data.result;
     state.userProfile = result;
@@ -101,7 +127,7 @@ const removeUserPic = () => {
 };
 
 const onClickProfileImg = () => {
-  if (isMyProfile) {
+  if (state.isMyProfile) {
     fileInput.value.click();
   }
 };
@@ -127,14 +153,52 @@ const handleScroll = () => {
   bindEvent(state, window, getFeedData);
 };
 
-onMounted(() => {
-  window.addEventListener("scroll", handleScroll);
+const getData = () => {
   getUserData();
   getFeedData();
+};
+
+//팔로우 버튼 클릭시
+const onClickFollow = async () => {
+  switch (state.userProfile.followState) {
+    case 0:
+    case 2: //post
+      const postRes = await postUserFollow({ toUserId: data.profileUserId });
+      if (postRes.status === 200) {
+        state.userProfile.followState += 1;
+        state.userProfile.followerCount += 1;
+      }
+      break;
+    default: //delete
+      const deleteRes = await deleteUserFollow({
+        to_user_id: data.profileUserId,
+      });
+      if (deleteRes.status === 200) {
+        state.userProfile.followState -= 1;
+        state.userProfile.followerCount -= 1;
+      }
+      break;
+  }
+};
+
+onMounted(() => {
+  window.addEventListener("scroll", handleScroll);
+  getData();
 });
 
 onUnmounted(() => {
   window.removeEventListener("scroll", handleScroll);
+});
+
+onBeforeRouteUpdate((to, from) => {
+  console.log("onBeforeRouteUpdate: to", to);
+  console.log("to.params.userId:", to.params.userId);
+  const toUserId = parseInt(to.params.userId);
+  if (toUserId !== data.profileUserId) {
+    init(toUserId);
+
+    getData();
+  }
 });
 </script>
 
@@ -158,11 +222,12 @@ onUnmounted(() => {
               <td class="pointer follow">
                 {{ state.userProfile.followingCount }}
               </td>
-              <td class="pl_10" v-if="!isMyProfile">
+              <td class="pl_10" v-if="!state.isMyProfile">
                 <input
                   type="button"
                   class="instaBtn"
-                  :value="getFollowStateText('')"
+                  :value="getFollowStateText(state.userProfile.followState)"
+                  @click="onClickFollow"
                 />
               </td>
             </tr>
@@ -172,7 +237,7 @@ onUnmounted(() => {
         <div>
           <div class="d-inline-flex" @click="onClickProfileImg">
             <profile-img
-              :clsValue="`profile ${isMyProfile ? 'pointer' : ''}`"
+              :clsValue="`profile ${state.isMyProfile ? 'pointer' : ''}`"
               :size="300"
               :pic="state.userProfile.pic"
               :userId="state.userProfile.userId"
@@ -180,7 +245,7 @@ onUnmounted(() => {
           </div>
           <div
             className="d-inline-flex item_container width-50"
-            v-if="isMyProfile && state.userProfile.pic"
+            v-if="state.isMyProfile && state.userProfile.pic"
           >
             <i
               className="fa fa-minus-square color-red pointer"
@@ -231,6 +296,7 @@ onUnmounted(() => {
     </div>
   </section>
 </template>
+
 <style scoped>
 section {
   display: flex;
