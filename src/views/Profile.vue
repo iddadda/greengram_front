@@ -11,7 +11,7 @@ import {
   deleteUserProfilePic,
 } from "@/services/userService";
 import { postUserFollow, deleteUserFollow } from "@/services/followService";
-import { getFeedList } from "@/services/feedService";
+import { getFeedList, deleteFeed } from "@/services/feedService";
 import { bindEvent } from "@/utils/commonUtils";
 
 const fileInput = ref(null);
@@ -121,6 +121,22 @@ const removeUserPic = async () => {
   if (res.status === 200) {
     state.userProfile.pic = null;
     authenticationStore.setSigndUserPic(null);
+  }
+};
+
+// 피드 삭제
+// 인덱스값을 받아야 리스트에서 하나만 삭제 가능하기 때문임
+const doDeleteFeed = async (feedId, idx) => {
+  if (!confirm("삭제하시겠습니까?")) return;
+
+  console.log("feedId:", feedId);
+  console.log("idx:", idx);
+
+  const params = { feed_id: feedId };
+
+  const res = await deleteFeed(params);
+  if (res.status === 200) {
+    state.list.splice(idx, 1); // param(startIdx, length)
   }
 };
 
@@ -282,9 +298,11 @@ onBeforeRouteUpdate((to, from) => {
 
       <div class="item_container mt-3">
         <feed-card
-          v-for="item in state.list"
+          v-for="(item, idx) in state.list"
           :key="item.feedId"
           :item="item"
+          :yn-del="true"
+          @on-delete-feed="doDeleteFeed(item.feedId, idx)"
         ></feed-card>
       </div>
 
