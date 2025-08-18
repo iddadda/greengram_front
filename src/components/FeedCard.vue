@@ -27,6 +27,7 @@ const props = defineProps({
     pics: Array,
     contents: String,
     isLike: Boolean,
+    likeCount: Number,
     comment: Object,
   },
   ynDel: Boolean,
@@ -36,12 +37,8 @@ const props = defineProps({
 const state = reactive({
   modules: [Navigation, Pagination, Scrollbar, A11y],
   isLike: props.item.isLike,
-  pagination:
-    props.item.pics.length <= 5
-      ? {
-          clickable: true,
-        }
-      : null,
+  pagination: props.item.pics.length <= 5 ? { clickable: true } : null,
+  likeCount: props.item.likeCount,
 });
 
 const toggleLike = async () => {
@@ -50,6 +47,7 @@ const toggleLike = async () => {
   const res = await toggleFeedLike(data);
   if (res.status === 200) {
     state.isLike = res.data.result;
+    state.likeCount = state.isLike ? state.likeCount + 1 : state.likeCount - 1;
   }
 };
 
@@ -143,6 +141,7 @@ const toggleLike = async () => {
         } fa-heart pointer rem1_2 me-3 color-red`"
         @click="toggleLike"
       ></i>
+      <span>{{ state.likeCount }}</span>
     </div>
     <div class="itemCtnt p-2" v-if="props.item.contents">
       {{ props.item.contents }}

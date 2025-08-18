@@ -4,6 +4,7 @@ import ProfileImg from "@/components/ProfileImg.vue";
 import FeedCard from "@/components/FeedCard.vue";
 import { ref, reactive, onMounted, onUnmounted } from "vue";
 import { useRoute, useRouter, onBeforeRouteUpdate } from "vue-router";
+import { useFeedStore } from "@/stores/feed";
 import { useAuthenticationStore } from "@/stores/authentication";
 import {
   getUserProfile,
@@ -14,6 +15,7 @@ import { postUserFollow, deleteUserFollow } from "@/services/followService";
 import { getFeedList, deleteFeed } from "@/services/feedService";
 import { bindEvent } from "@/utils/commonUtils";
 
+const feedStore = useFeedStore();
 const fileInput = ref(null);
 const authenticationStore = useAuthenticationStore();
 
@@ -30,7 +32,6 @@ const state = reactive({
   isLoading: false,
   isFinish: false,
   userProfile: null,
-  list: [],
 });
 
 const init = (userId) => {
@@ -47,7 +48,7 @@ const init = (userId) => {
     followingCount: 0,
     followState: 0,
   };
-  state.list = [];
+  feedStore.clearList();
 
   data.page = 1;
   data.profileUserId = userId;
@@ -106,7 +107,7 @@ const getFeedData = async () => {
   if (res.status === 200) {
     const result = res.data.result;
     if (result && result.length > 0) {
-      state.list.push(...result);
+      feedStore.addFeedList(result);
     }
     if (result.length < data.rowPerPage) {
       state.isFinish = true;
@@ -136,7 +137,8 @@ const doDeleteFeed = async (feedId, idx) => {
 
   const res = await deleteFeed(params);
   if (res.status === 200) {
-    state.list.splice(idx, 1); // param(startIdx, length)
+    // state.list.splice(idx, 1); // param(startIdx, length)
+    feedStore.deleteFeedByIdx(idx);
   }
 };
 
@@ -202,6 +204,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   window.removeEventListener("scroll", handleScroll);
+  feedStore.clearList();
 });
 
 onBeforeRouteUpdate((to, from) => {
@@ -298,7 +301,7 @@ onBeforeRouteUpdate((to, from) => {
 
       <div class="item_container mt-3">
         <feed-card
-          v-for="(item, idx) in state.list"
+          v-for="(item, idx) in feedStore.feedList"
           :key="item.feedId"
           :item="item"
           :yn-del="true"

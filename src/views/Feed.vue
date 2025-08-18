@@ -1,25 +1,18 @@
 <script setup>
-import { ref, reactive, onMounted, onUnmounted } from "vue";
+import { reactive, onMounted, onUnmounted } from "vue";
+import { useFeedStore } from "@/stores/feed";
 import { useAuthenticationStore } from "@/stores/authentication";
 import FeedCard from "@/components/FeedCard.vue";
-import { getFeedList, postFeed } from "@/services/feedService";
+import { getFeedList } from "@/services/feedService";
 import { bindEvent } from "@/utils/commonUtils";
 
 const INFINITY_SCROLL_GAP = 500;
 
-const modalCloseButton = ref(null);
-
-const authenticationStore = useAuthenticationStore();
+const feedStore = useFeedStore();
 
 const state = reactive({
-  list: [],
   isLoading: false,
   isFinish: false,
-  feed: {
-    location: "",
-    contents: "",
-    pics: [],
-  },
 });
 
 const data = {
@@ -38,21 +31,8 @@ onMounted(() => {
 
 onUnmounted(() => {
   window.removeEventListener("scroll", handleScroll);
+  feedStore.clearList();
 });
-
-const getCurrentTimestamp = () => {
-  const today = new Date();
-
-  const year = today.getFullYear();
-  const month = ("0" + (today.getMonth() + 1)).slice(-2);
-  const day = ("0" + today.getDate()).slice(-2);
-
-  const hours = ("0" + today.getHours()).slice(-2);
-  const minutes = ("0" + today.getMinutes()).slice(-2);
-  const seconds = ("0" + today.getSeconds()).slice(-2);
-
-  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
-};
 
 const getData = async () => {
   state.isLoading = true;
@@ -64,7 +44,7 @@ const getData = async () => {
   if (res.status === 200) {
     const result = res.data.result;
     if (result && result.length > 0) {
-      state.list.push(...result);
+      feedStore.addFeedList(result);
     }
     if (result.length < data.rowPerPage) {
       state.isFinish = true;
@@ -73,76 +53,16 @@ const getData = async () => {
   state.isLoading = false;
 };
 
-const handlePicChanged = (e) => {
-  state.feed.pics = e.target.files;
-};
-
-const saveFeed = async () => {
-  console.log("state.feed.pics: ", state.feed.pics);
-  const MAX_PIC_COUNT = 10;
-  //사진 있는지 확인
-  if (state.feed.pics.length === 0) {
-    alert("사진을 선택해 주세요.");
-    return;
-  } else if (state.feed.pics.length > MAX_PIC_COUNT) {
-    alert(`사진은 ${MAX_PIC_COUNT}장까지 선택 가능합니다.`);
-    return;
-  }
-
-  const params = {
-    contents: state.feed.contents.length === 0 ? null : state.feed.contents,
-    location: state.feed.location.length === 0 ? null : state.feed.location,
-  };
-
-  const formData = new FormData();
-  formData.append(
-    "req",
-    new Blob([JSON.stringify(params)], { type: "application/json" })
-  );
-  for (let i = 0; i < state.feed.pics.length; i++) {
-    formData.append("pic", state.feed.pics[i]);
-  }
-
-  // formData.append('pic', state.feed.pics[0])
-  // formData.append('pic', state.feed.pics[1])
-  // formData.append('pic', state.feed.pics[2])
-
-  const res = await postFeed(formData);
-  if (res.status === 200) {
-    const result = res.data.result;
-
-    const item = {
-      ...params,
-      feedId: result.feedId,
-      pics: result.pics,
-      writerId: authenticationStore.state.signedUser.userId,
-      writerNickName: authenticationStore.state.signedUser.nickName,
-      writerPic: authenticationStore.state.signedUser.pic,
-      createdAt: getCurrentTimestamp(),
-      comment: {
-        moreComment: false,
-        commentList: [],
-      },
-    };
-
-    state.list.unshift(item);
-    initInputs();
-    modalCloseButton.value.click(); //모달창 닫기
-  }
-};
-
-const initInputs = () => {
-  state.feed.contents = "";
-  state.feed.location = "";
-  state.feed.pics = [];
-};
+// formData.append('pic', state.feed.pics[0])
+// formData.append('pic', state.feed.pics[1])
+// formData.append('pic', state.feed.pics[2])
 </script>
 
 <template>
   <section class="back_color">
     <div class="container d-flex flex-column align-items-center">
       <feed-card
-        v-for="item in state.list"
+        v-for="item in feedStore.feedList"
         :key="item.feedIdid"
         :item="item"
       ></feed-card>
@@ -151,78 +71,6 @@ const initInputs = () => {
       </div>
     </div>
   </section>
-  <div
-    class="modal fade"
-    id="newFeedModal"
-    tabIndex="-1"
-    aria-labelledby="newFeedModalLabel"
-    aria-hidden="false"
-  >
-    <div class="modal-dialog modal-dialog-centered modal-xl">
-      <div class="modal-content" id="newFeedModalContent">
-        <div class="modal-header">
-          <h5 class="modal-title" id="newFeedModalLabel">새 게시물 만들기</h5>
-          <button
-            type="button"
-            class="btn-close"
-            data-bs-dismiss="modal"
-            aria-label="Close"
-            ref="modalCloseButton"
-          ></button>
-        </div>
-        <div class="modal-body" id="id-modal-body">
-          <div>
-            <h5 class="mt-2">location</h5>
-            <input
-              type="text"
-              name="location"
-              placeholder="위치"
-              v-model="state.feed.location"
-              class="form-control"
-            />
-          </div>
-          <div>
-            <h5 class="mt-2">contents</h5>
-            <textarea
-              name="contents"
-              placeholder="내용"
-              v-model="state.feed.contents"
-              class="form-control"
-            ></textarea>
-          </div>
-          <div>
-            <h5 class="mt-2">pic</h5>
-            <!-- <label>
-              <input
-                name="pics"
-                type="file"
-                multiple
-                accept="image/*"
-                @change="handlePicChanged"
-                class="mt-3"
-            />
-            </label> -->
-          </div>
-          <div>
-            <div class="input-group mb-3">
-              <input
-                name="pics"
-                type="file"
-                multiple
-                accept="image/*"
-                @change="handlePicChanged"
-                class="form-control"
-                id="inputGroupFile01"
-              />
-            </div>
-          </div>
-          <div class="d-flex">
-            <button class="btn btn-dark mt-3" @click="saveFeed">전송</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
 </template>
 
 <style scoped>
